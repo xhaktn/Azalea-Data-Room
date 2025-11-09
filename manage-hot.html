@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1024" />
+  <title>열혈멤버 관리 - 원주여자고등학교</title>
+  <style>
+    body{margin:0;font-family:'Noto Sans KR',sans-serif;background:#fff0f3;}
+    .header{display:flex;justify-content:space-between;align-items:center;padding:10px 20px;border-bottom:2px solid #000;}
+    .nav-container{flex:1;display:flex;justify-content:center;}
+    .nav{display:flex;gap:80px;font-size:14px;}
+    .nav a{text-decoration:none;color:#000;}
+    .nav a:hover{font-weight:bold;}
+    .login{background:#fce4ec;padding:5px 15px;border-radius:10px;font-size:14px;cursor:pointer;}
+
+    .main{padding:30px;}
+    .square{
+      background:#FFDDE3;
+      padding:30px;
+      border-radius:10px;
+      box-shadow:0 2px 5px rgba(0,0,0,.05);
+      border:2px solid #f9aebe;
+      margin-top:20px;
+      max-width:1000px;
+      margin-left:auto;margin-right:auto;
+    }
+    h2{margin:0 0 12px 0;color:#5b3b3b;font-size:22px;}
+
+    .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+    .input{padding:8px;border:1px solid #f3b3c1;border-radius:8px;background:#fff;}
+    .btn{
+      background:#ffd2db;border:1px solid #f9aebe;color:#5b3b3b;
+      padding:8px 12px;border-radius:8px;cursor:pointer;text-decoration:none;
+    }
+    .btn:hover{background:#fff3f5}
+
+    table{width:100%;border-collapse:separate;border-spacing:0 8px;}
+    thead th{font-size:13px;color:#666;text-align:left;padding:6px 10px;}
+    tbody tr{
+      background:#fff;border:1px solid #f9aebe;border-radius:10px;
+      box-shadow:0 2px 5px rgba(0,0,0,.05);
+    }
+    tbody td{padding:10px;}
+    .pill{
+      display:inline-block;padding:4px 8px;border-radius:999px;font-size:12px;border:1px solid #f9aebe;background:#fff8fb;color:#5b3b3b;
+    }
+    .hot-badge{
+      display:inline-block;margin-left:6px;padding:2px 6px;border-radius:6px;
+      background:#ffe680;border:1px solid #f3c35f;color:#7a5200;font-size:11px;font-weight:700;
+    }
+    .toggle{
+      appearance:none;width:42px;height:24px;border-radius:999px;position:relative;outline:none;cursor:pointer;border:1px solid #f9aebe;background:#ffeaef;vertical-align:middle;
+    }
+    .toggle:before{
+      content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:all .2s;
+      box-shadow:0 1px 2px rgba(0,0,0,.15);
+    }
+    .toggle:checked{background:#f9aebe;}
+    .toggle:checked:before{left:22px;}
+    .right{display:flex;gap:8px;align-items:center;justify-content:flex-end}
+    .muted{font-size:12px;color:#888}
+  </style>
+</head>
+<body>
+  <div class="header">
+    <a href="index.html" style="text-decoration:none;color:#000;padding:10px 20px;"><b>원주여자고등학교</b></a>
+    <div class="nav-container">
+      <div class="nav">
+        <a href="posts.html">게시판</a>
+        <a href="notice.html">공지사항</a>
+        <a href="inquiry.html">문의하기</a>
+      </div>
+    </div>
+    <div class="login">로그인</div>
+  </div>
+
+  <div class="main">
+    <div class="square">
+      <h2>열혈멤버 관리</h2>
+      <div class="muted" id="adminGuard" style="margin-bottom:8px;"></div>
+
+      <div class="toolbar">
+        <input id="kw" class="input" type="text" placeholder="이름/닉네임/학년 검색" />
+        <button id="btnReload" class="btn">새로고침</button>
+      </div>
+
+      <div class="muted" style="margin-bottom:6px;">※ 🔒 관리자만 접근 가능합니다. Firestore 보안 규칙에서 admin만 users 쓰기가 가능하도록 설정해 주세요.</div>
+
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:56px;">#</th>
+              <th>닉네임</th>
+              <th>이름</th>
+              <th>학년</th>
+              <th>점수</th>
+              <th>열혈</th>
+              <th style="width:160px;text-align:right;">작업</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="7" class="muted" style="padding:14px;">로딩중…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import { getFirestore, collection, getDocs, query, orderBy, updateDoc, doc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+    // === Firebase config (네 프로젝트 값 그대로) ===
+    const firebaseConfig = {
+      apiKey: "AIzaSyCrxJuOjHGdttC2gfwfjqsvAjHicEav6BA",
+      authDomain: "wjgh-learningdataroom.firebaseapp.com",
+      projectId: "wjgh-learningdataroom",
+      storageBucket: "wjgh-learningdataroom.firebasestorage.app",
+      messagingSenderId: "284248567704",
+      appId: "1:284248567704:web:88e70e08666e13ff80c5ed"
+    };
+
+    // === App / Auth ===
+    const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    signInAnonymously(auth).catch(()=>{});
+    const db = getFirestore(app);
+
+    // === Admin Guard (프론트 체크) ===
+    const loginDiv = document.querySelector(".login");
+    const guard = document.getElementById("adminGuard");
+    const me = JSON.parse(localStorage.getItem("user") || "null");
+
+    if (me) {
+      loginDiv.textContent = `${me.name}님 환영합니다`;
+      loginDiv.style.fontWeight = "bold";
+      loginDiv.style.cursor = "default";
+      loginDiv.addEventListener("click", () => {
+        if (confirm("로그아웃 하시겠습니까?")) {
+          localStorage.removeItem("user");
+          location.href = "login.html";
+        }
+      });
+    } else {
+      loginDiv.textContent = "로그인";
+      loginDiv.style.cursor = "pointer";
+      loginDiv.addEventListener("click", () => location.href = "login.html");
+    }
+
+    if (!me || me.role !== "admin") {
+      guard.textContent = "접근 권한이 없습니다. (관리자 전용)";
+      alert("관리자만 접근할 수 있습니다.");
+      location.href = "index.html";
+    }
+
+    // === UI refs ===
+    const kwInput = document.getElementById("kw");
+    const btnReload = document.getElementById("btnReload");
+    const tbody = document.getElementById("tbody");
+
+    let rows = [];
+
+    function scoreEmoji(score){
+      if (score >= 20) return "🔥";
+      if (score >= 10) return "🌟";
+      if (score >= 5)  return "👍";
+      return "";
+    }
+
+    function draw(list){
+      tbody.innerHTML = "";
+      if (!list.length){
+        tbody.innerHTML = `<tr><td colspan="7" class="muted" style="padding:14px;">사용자 데이터가 없습니다.</td></tr>`;
+        return;
+      }
+      list.forEach((u, idx) => {
+        const tr = document.createElement("tr");
+        const badge = u.hotMember ? `<span class="hot-badge">HOT</span>` : "";
+        tr.innerHTML = `
+          <td>${idx+1}</td>
+          <td>${(u.nickname||"")}${badge}</td>
+          <td>${u.name||""}</td>
+          <td><span class="pill">${u.grade||""}</span></td>
+          <td>${u.score ?? 0} ${scoreEmoji(u.score||0)}</td>
+          <td>
+            <input type="checkbox" class="toggle" ${u.hotMember ? "checked" : ""} data-id="${u.__id}" />
+          </td>
+          <td>
+            <div class="right">
+              <button class="btn btn-save" data-id="${u.__id}">저장</button>
+              <span class="muted">문서ID: ${u.__id}</span>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function filterAndDraw(){
+      const kw = (kwInput.value||"").trim().toLowerCase();
+      const f = rows.filter(u => {
+        const t = `${u.nickname||""} ${u.name||""} ${u.grade||""}`.toLowerCase();
+        return !kw || t.includes(kw);
+      });
+      draw(f);
+    }
+
+    async function load(){
+      tbody.innerHTML = `<tr><td colspan="7" class="muted" style="padding:14px;">로딩중…</td></tr>`;
+      rows = [];
+      try {
+        // 점수순으로 정렬해서 보이면 편함
+        const qy = query(collection(db,"users"), orderBy("score","desc"));
+        const snap = await getDocs(qy);
+        snap.forEach(d => rows.push({ __id: d.id, ...d.data() }));
+      } catch (e){
+        console.warn("정렬 쿼리 실패 → 전체 스캔:", e);
+        const snap = await getDocs(collection(db,"users"));
+        snap.forEach(d => rows.push({ __id: d.id, ...d.data() }));
+        // score 기준 수동 정렬
+        rows.sort((a,b)=>(b.score||0)-(a.score||0));
+      }
+      filterAndDraw();
+    }
+
+    // 저장(토글 반영)
+    tbody.addEventListener("click", async (e) => {
+      if (e.target.classList.contains("btn-save")){
+        const id = e.target.getAttribute("data-id");
+        const toggle = tbody.querySelector(`.toggle[data-id="${id}"]`);
+        const makeHot = !!toggle?.checked;
+
+        try {
+          await updateDoc(doc(db,"users",id), { hotMember: makeHot });
+          alert("저장되었습니다.");
+          // 메모리 상태 업데이트 후 다시 그리기
+          const t = rows.find(x => x.__id === id);
+          if (t) t.hotMember = makeHot;
+          filterAndDraw();
+        } catch (err){
+          console.error(err);
+          alert("저장 중 오류가 발생했습니다. (보안 규칙을 확인하세요)");
+        }
+      }
+    });
+
+    kwInput.addEventListener("input", filterAndDraw);
+    btnReload.addEventListener("click", load);
+
+    load();
+  </script>
+</body>
+</html>

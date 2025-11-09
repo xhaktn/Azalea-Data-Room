@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>로그인 - 원주여자고등학교</title>
+  <meta name="viewport" content="width=1024">
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCrxJuOjHGdttC2gfwfjqsvAjHicEav6BA",
+      authDomain: "wjgh-learningdataroom.firebaseapp.com",
+      projectId: "wjgh-learningdataroom",
+      storageBucket: "wjgh-learningdataroom.firebasestorage.app",
+      messagingSenderId: "284248567704",
+      appId: "1:284248567704:web:88e70e08666e13ff80c5ed"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.login = async function () {
+      const inputId = document.getElementById("id").value;
+      const inputPw = document.getElementById("pw").value;
+
+      const querySnapshot = await getDocs(collection(db, "users"));
+      let success = false;
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.id === inputId && data.pw === inputPw) {
+          localStorage.setItem("user", JSON.stringify({
+            id: data.id,
+            role: data.role,
+            nickname: data.nickname,
+            name: data.name,
+            grade: data.grade,
+            class: data.class
+          }));
+          success = true;
+          alert("로그인 성공!");
+          window.location.href = "posts.html";
+        }
+      });
+
+      if (!success) {
+        alert("아이디 또는 비밀번호가 틀렸습니다.");
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background-color: #fff0f3;
+      margin: 0;
+      padding: 0;
+    }
+    .back {
+      padding: 20px;
+      font-size: 14px;
+    }
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 80vh;
+    }
+    .login-box {
+      background-color: #ffffff;
+      padding: 40px;
+      border: 1px solid #333;
+      border-radius: 10px;
+      width: 400px;
+      box-sizing: border-box;
+    }
+    .login-box h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #5b3b3b;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 10px;
+      font-size: 14px;
+      border-radius: 8px;
+      border: 1px solid #333;
+    }
+    .login-btn {
+      width: 100%;
+      padding: 12px;
+      background-color: #f9aebe;
+      border: none;
+      color: white;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .login-btn:hover {
+      background-color: #f08ca0;
+    }
+    .bottom-links {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 13px;
+      color: #777;
+    }
+    .bottom-links a {
+      text-decoration: none;
+      color: #5b3b3b;
+      margin: 0 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="back"><a href="javascript:history.back()">← 뒤로가기</a></div>
+  <div class="container">
+    <div class="login-box">
+      <h2>로그인</h2>
+      <div class="form-group">
+        <label for="id">아이디</label>
+        <input type="text" id="id" placeholder="아이디 입력">
+      </div>
+      <div class="form-group">
+        <label for="pw">비밀번호</label>
+        <input type="password" id="pw" placeholder="비밀번호 입력">
+      </div>
+      <button class="login-btn" onclick="login()">로그인</button>
+      <div class="bottom-links">
+        <a href="signup.html">회원가입</a> |
+        <a href="#">비밀번호 찾기</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

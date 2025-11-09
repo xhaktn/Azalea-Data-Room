@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1024" />
+  <title>원주여자고등학교 진달래자료실</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Noto Sans KR', sans-serif;
+      background-color: #fff0f3;
+    }
+
+    /* ===== Header ===== */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      border-bottom: 2px solid black;
+    }
+    .header h1 { margin: 0; font-size: 18px; }
+    .nav-container { flex: 1; display: flex; justify-content: center; }
+    .nav { display: flex; gap: 80px; font-size: 14px; }
+    .nav a { text-decoration: none; color: black; }
+    .nav a:hover { font-weight: bold; }
+    .login {
+      background-color: #fce4ec;
+      padding: 5px 15px;
+      border-radius: 10px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .wjg { text-decoration: none; color: black; padding: 10px 20px; }
+
+    /* ===== Hero(Main) ===== */
+    .main {
+      position: relative;                 /* 랭킹 박스를 올리기 위함 */
+      background-image:
+        linear-gradient(to bottom, #ffffff 25%, rgba(255, 255, 255, 0) 55%),
+        url("원여고운동장.jpg");
+      background-size: 100% 100%;
+      background-position: center bottom;
+      background-repeat: no-repeat;
+      margin: 20px;
+      padding: 30px 30px 40px;
+      border-radius: 20px;
+      height: 600px;
+      color: black;
+    }
+    .main h2 { font-size: 36px; margin: 0 0 10px 0; }
+    .main p { font-size: 14px; line-height: 1.8; margin: 6px 0 0 0; }
+
+    /* 메인 버튼들 */
+    .hero-buttons { display: flex; gap: 30px; margin-top: 24px; }
+    .hero-btn {
+      width: 220px; height: 60px; line-height: 60px;
+      background-color: pink; text-align: center; border-radius: 40px;
+    }
+    .hero-btn a { display: block; width:100%; height:100%; text-decoration:none; color:black; font-size:18px; }
+
+    /* ===== Floating Ranking Box ===== */
+    .ranking-float {
+      position: absolute;
+      top: 120px;                 /* 필요하면 미세 조정 */
+      right: 40px;                /* 필요하면 미세 조정 */
+      width: 360px;
+      background: rgba(255, 221, 227, 0.9);
+      backdrop-filter: blur(6px);
+      border: 2px solid #f9aebe;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0,0,0,.08);
+      padding: 18px 18px 14px;
+      z-index: 2;
+    }
+    .ranking-header {
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      margin: 0 0 10px 0;
+    }
+    .see-all {
+      background:#ffd2db; border:1px solid #f9aebe; color:#5b3b3b;
+      padding:6px 10px; border-radius:8px; font-size:13px; text-decoration:none;
+    }
+    .see-all:hover { background:#fff3f5; }
+    .ranking-list { display:flex; flex-direction:column; gap:10px; max-height:380px; overflow:auto; }
+    .rank-item {
+      display:flex; align-items:center; justify-content:space-between;
+      background:#fff; border:1px solid #f9aebe; border-radius:10px; padding:10px 12px;
+      box-shadow:0 2px 5px rgba(0,0,0,.05);
+    }
+    .rank-left { display:flex; align-items:center; gap:10px; }
+    .rank-medal {
+      width:26px; height:26px; display:flex; align-items:center; justify-content:center;
+      border-radius:50%; background:#ffe6ec; border:1px solid #f9aebe; font-weight:bold;
+    }
+    .rank-name { font-weight:600; color:#333; }
+    .rank-meta { font-size:12px; color:#888; }
+    .rank-score-badge {
+      font-size:13px; color:#5b3b3b; background:#fff8fb; border:1px solid #f9aebe;
+      padding:4px 8px; border-radius:8px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ===== Header ===== -->
+  <div class="header">
+    <a href="index.html" class="wjg"><b>원주여자고등학교</b></a>
+    <div class="nav-container">
+      <div class="nav">
+        <a href="posts.html">게시판</a>
+        <a href="notice.html">공지사항</a>
+        <a href="inquiry.html">문의하기</a>
+      </div>
+    </div>
+    <div class="login">로그인</div>
+  </div>
+
+  <!-- ===== Hero(Main) ===== -->
+  <div class="main">
+    <div style="font-size:20px;">원주여자고등학교</div>
+    <h2>학습상담부</h2>
+    <p>이곳은 원주여자고등학교 학습상담부의 웹사이트 입니다.</p>
+
+    <div class="hero-buttons">
+      <div class="hero-btn"><a href="login.html">로그인</a></div>
+      <div class="hero-btn"><a href="write-post.html">글 작성하러 가기</a></div>
+    </div>
+
+    <!-- 🔥 히어로 우측 떠 있는 랭킹 박스 -->
+    <div class="ranking-float">
+      <div class="ranking-header">
+        <h3 style="margin:0; color:#5b3b3b;">이번 달 TOP 5</h3>
+
+        <!-- ✅ 관리자 전용 버튼 (기본 숨김) -->
+        <div style="display:flex; align-items:center; gap:6px;">
+          <a id="adminHotBtn"
+             href="manage-hot.html"
+             class="see-all"
+             style="display:none;">🔥 열혈멤버 관리</a>
+          <a href="ranking.html" class="see-all">전체 랭킹 보기 →</a>
+        </div>
+      </div>
+      <div id="rankingList" class="ranking-list"></div>
+    </div>
+  </div>
+
+  <!-- ===== 로그인 버튼(우상단) + 관리자 버튼 표시 ===== -->
+  <script type="module">
+    document.addEventListener("DOMContentLoaded", () => {
+      const userStr = localStorage.getItem("user");
+      const loginDiv = document.querySelector(".login");
+      const adminHotBtn = document.getElementById("adminHotBtn");
+
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        loginDiv.textContent = `${user.name}님 환영합니다`;
+        loginDiv.style.fontWeight = "bold";
+        loginDiv.style.cursor = "default";
+        loginDiv.addEventListener("click", () => {
+          if (confirm("로그아웃 하시겠습니까?")) {
+            localStorage.removeItem("user");
+            location.reload();
+          }
+        });
+
+        // ✅ 관리자만 열혈멤버 관리 버튼 보이기
+        if (user.role === "admin" && adminHotBtn) {
+          adminHotBtn.style.display = "inline-block";
+        }
+      } else {
+        loginDiv.textContent = "로그인";
+        loginDiv.style.cursor = "pointer";
+        loginDiv.addEventListener("click", () => {
+          location.href = "login.html";
+        });
+      }
+    });
+  </script>
+
+  <!-- ===== 랭킹 스크립트 (Firestore users.score 기준 TOP5) ===== -->
+  <script type="module">
+    import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import { getFirestore, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCrxJuOjHGdttC2gfwfjqsvAjHicEav6BA",
+      authDomain: "wjgh-learningdataroom.firebaseapp.com",
+      projectId: "wjgh-learningdataroom",
+      storageBucket: "wjgh-learningdataroom.firebasestorage.app",
+      messagingSenderId: "284248567704",
+      appId: "1:284248567704:web:88e70e08666e13ff80c5ed"
+    };
+
+    const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    signInAnonymously(auth).catch(() => {});
+    const db = getFirestore(app);
+
+    const listEl = document.getElementById("rankingList");
+
+    // 점수 → 이모지
+    function scoreEmoji(score){
+      if (score >= 20) return "🔥";
+      if (score >= 10) return "🌟";
+      if (score >= 5)  return "👍";
+      return "";
+    }
+    // 순위 → 메달
+    function rankMedal(n){
+      if (n===1) return "🥇";
+      if (n===2) return "🥈";
+      if (n===3) return "🥉";
+      return n; // 4,5위는 숫자
+    }
+
+    function render(items){
+      listEl.innerHTML = "";
+      if (!items.length){
+        // 데이터 없을 때, 샘플 3개
+        items = [
+          { nickname:"샘플1", score:14 }, { nickname:"샘플2", score:9 }, { nickname:"샘플3", score:4 }
+        ];
+      }
+      items.forEach((u, idx) => {
+        const medal = rankMedal(idx+1);
+        const badge = scoreEmoji(u.score||0);
+        const name  = u.nickname || u.name || "이름없음";
+        const grade = u.grade || "";
+
+        const row = document.createElement("div");
+        row.className = "rank-item";
+        row.innerHTML = `
+          <div class="rank-left">
+            <div class="rank-medal">${medal}</div>
+            <div>
+              <div class="rank-name">${name} ${badge}</div>
+              <div class="rank-meta">${grade}</div>
+            </div>
+          </div>
+          <div class="rank-score-badge">${u.score ?? 0} 점</div>
+        `;
+        listEl.appendChild(row);
+      });
+    }
+
+    (async () => {
+      try{
+        const qy = query(collection(db, "users"), orderBy("score","desc"), limit(5));
+        const snap = await getDocs(qy);
+        const rows = [];
+        snap.forEach(d => rows.push(d.data()));
+        render(rows);
+      }catch(e){
+        console.warn("랭킹 조회 실패(샘플로 대체):", e);
+        render([]);
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1024" />
+  <title>공지사항 - 원주여자고등학교</title>
+  <style>
+    body{margin:0;font-family:'Noto Sans KR',sans-serif;background:#fff0f3;}
+    .header{display:flex;justify-content:space-between;align-items:center;padding:10px 20px;border-bottom:2px solid #000;}
+    .nav-container{flex:1;display:flex;justify-content:center;}
+    .nav{display:flex;gap:80px;font-size:14px;}
+    .nav a{text-decoration:none;color:#000;}
+    .nav a:hover{font-weight:bold;}
+    .login{background:#fce4ec;padding:5px 15px;border-radius:10px;font-size:14px;cursor:pointer;}
+
+    /* 통일된 nav-bar */
+    .nav-bar {
+      background-color: #ffcbd6; display: flex; justify-content: space-around; align-items: center;
+      height: 48px; font-size: 14px; margin: 20px; border-radius: 10px;
+      border: 2px solid #f9aebe; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); overflow: hidden;
+    }
+    .nav-bar a {
+      flex: 1; text-align: center; text-decoration: none; color: black; padding: 10px 0;
+      border-right: 1px solid #d999aa; transition: all 0.2s ease;
+    }
+    .nav-bar a:last-child { border-right: none; }
+    .nav-bar a:hover { background-color: #fdd8e1; font-weight: bold; }
+
+    .main{padding:30px;}
+
+    /* posts.html과 통일된 square */
+    .square {
+      background: #FFDDE3; padding: 30px; border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,.05); border: 2px solid #f9aebe; margin-top: 20px;
+    }
+    h2 { margin-top: 0; color: #5b3b3b; font-size: 22px; }
+
+    /* 카드 리스트 (posts와 통일) */
+    .post-list { display: flex; flex-direction: column; gap: 15px; height: 500px; overflow-y: auto; }
+    .post {
+      background:#fff; padding:15px; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,.05);
+      border:1px solid #f9aebe; transition:.2s; display:flex; justify-content:space-between; align-items:center; gap:10px;
+    }
+    .post:hover{ background:#fff3f5; transform: translateY(-1px); }
+    .post a{ text-decoration:none; color:inherit; display:flex; justify-content:space-between; align-items:center; width:100%; gap:10px; }
+    .post-title{ font-weight:bold; font-size:16px; }
+    .post-info{ font-size:12px; color:gray; text-align:right; white-space:nowrap; }
+
+    /* 관리자 전용 아이콘 */
+    .delete-btn{
+      cursor:pointer; user-select:none; font-size:18px; line-height:1;
+      padding:4px 6px; border-radius:6px;
+    }
+    .delete-btn:hover{ background:#ffe3ea; }
+    .write-btn{
+      background:#f9aebe;color:#fff;border-radius:10px;padding:6px 12px;
+      text-decoration:none;border:1px solid #f4a2b5;
+    }
+    .wjg{ text-decoration:none;color:#000;padding:10px 20px; }
+  </style>
+</head>
+<body style="overflow:none">
+  <div class="header">
+    <a href="index.html" class="wjg"><b>원주여자고등학교</b></a>
+    <div class="nav-container">
+      <div class="nav">
+        <a href="posts.html">게시판</a>
+        <a href="notice.html" class="active">공지사항</a>
+        <a href="inquiry.html">문의하기</a>
+      </div>
+    </div>
+    <div class="login">로그인</div>
+  </div>
+
+  <div class="nav-bar" id="navBar">
+    <a href="notice.html" class="active">공지 목록</a>
+    <!-- 관리자면 '공지 작성' 버튼이 동적으로 붙습니다 -->
+  </div>
+
+  <div class="main">
+    <div class="square">
+      <h2 style="margin:0 0 12px 0;">공지 목록</h2>
+      <div class="post-list" id="noticeList"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import { getFirestore, collection, query, orderBy, getDocs, getDoc, doc, deleteDoc, limit } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCrxJuOjHGdttC2gfwfjqsvAjHicEav6BA",
+      authDomain: "wjgh-learningdataroom.firebaseapp.com",
+      projectId: "wjgh-learningdataroom",
+      storageBucket: "wjgh-learningdataroom.firebasestorage.app",
+      messagingSenderId: "284248567704",
+      appId: "1:284248567704:web:88e70e08666e13ff80c5ed"
+    };
+
+    const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    signInAnonymously(auth).catch(console.warn);
+    const db = getFirestore(app);
+
+    const API_BASE = "http://127.0.0.1:5000";
+
+    // 로그인/버튼 UI
+    let currentUser = null;
+    document.addEventListener("DOMContentLoaded", () => {
+      const userStr = localStorage.getItem("user");
+      const loginDiv = document.querySelector(".login");
+      const navBar = document.getElementById("navBar");
+
+      if (userStr) {
+        currentUser = JSON.parse(userStr);
+        loginDiv.textContent = `${currentUser.name}님 환영합니다`;
+        loginDiv.style.fontWeight = "bold";
+        loginDiv.style.cursor = "default";
+        loginDiv.addEventListener("click", () => {
+          if (confirm("로그아웃 하시겠습니까?")) {
+            localStorage.removeItem("user"); location.reload();
+          }
+        });
+
+        // 관리자 전용 '공지 작성' 버튼 추가
+        if (currentUser.role === "admin") {
+          const a = document.createElement("a");
+          a.href = "write-notice.html";
+          a.className = "write-btn";
+          a.textContent = "공지 작성";
+          navBar.appendChild(a);
+        }
+      } else {
+        loginDiv.textContent = "로그인";
+        loginDiv.style.cursor = "pointer";
+        loginDiv.addEventListener("click", () => location.href = "login.html");
+      }
+    });
+
+    // 공지 목록 로드
+    async function loadNotices() {
+      const list = document.getElementById("noticeList");
+      list.innerHTML = "로딩중…";
+
+      let docsArr = [];
+      try {
+        const q = query(collection(db, "notices"), orderBy("createdAt", "desc"), limit(300));
+        const snap = await getDocs(q);
+        snap.forEach(d => docsArr.push({ id: d.id, data: d.data() }));
+      } catch (e) {
+        console.warn("createdAt 정렬 실패, 전체 스캔:", e);
+        const snap = await getDocs(collection(db, "notices"));
+        snap.forEach(d => docsArr.push({ id: d.id, data: d.data() }));
+        docsArr.sort((a,b)=>{
+          const ta = a.data.createdAt?.seconds ?? a.data.createdAt?._seconds ?? 0;
+          const tb = b.data.createdAt?.seconds ?? b.data.createdAt?._seconds ?? 0;
+          return tb - ta;
+        });
+      }
+
+      list.innerHTML = "";
+      if (!docsArr.length) {
+        list.innerHTML = "<div style='color:#777'>등록된 공지가 없습니다.</div>";
+        return;
+      }
+
+      for (const { id, data } of docsArr) {
+        const title = data.title || "제목 없음";
+        const dateStr = data.createdAt?.toDate
+          ? data.createdAt.toDate().toLocaleDateString("ko-KR")
+          : "";
+        const row = document.createElement("div");
+        row.className = "post";
+        row.innerHTML = `
+          <a href="view-notice.html?id=${id}">
+            <div>
+              <div class="post-title">${title}</div>
+              <div class="post-info">${data.nickname || "관리자"}</div>
+            </div>
+            <div class="post-info">${dateStr}</div>
+          </a>
+          ${currentUser?.role === "admin" ? `<span class="delete-btn" title="삭제" data-id="${id}">🗑</span>` : ""}
+        `;
+        list.appendChild(row);
+      }
+    }
+
+    // (관리자) 삭제 핸들러: 첨부까지 함께 삭제
+    document.addEventListener("click", async (e) => {
+      const btn = e.target.closest(".delete-btn");
+      if (!btn) return;
+
+      if (currentUser?.role !== "admin") {
+        alert("관리자만 삭제할 수 있습니다.");
+        return;
+      }
+
+      const id = btn.getAttribute("data-id");
+      if (!id) return;
+
+      if (!confirm("정말 이 공지를 삭제하시겠습니까? 첨부파일이 있다면 함께 삭제됩니다.")) return;
+
+      try {
+        // 첨부 확인
+        const snap = await getDoc(doc(db, "notices", id));
+        const data = snap.exists() ? snap.data() : null;
+
+        if (data?.attachment?.key) {
+          try {
+            await fetch(`${API_BASE}/api/delete?key=${encodeURIComponent(data.attachment.key)}`, { method: "DELETE" });
+          } catch (err) {
+            console.warn("첨부 삭제 실패(무시 가능):", err);
+          }
+        }
+
+        await deleteDoc(doc(db, "notices", id));
+        alert("삭제되었습니다.");
+        location.reload();
+      } catch (err) {
+        console.error(err);
+        alert("삭제 중 오류가 발생했습니다.");
+      }
+    });
+
+    loadNotices();
+  </script>
+</body>
+</html>

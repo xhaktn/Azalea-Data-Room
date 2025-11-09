@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1024">
+  <title>게시글 보기 - 원주여자고등학교</title>
+  <style>
+    .hot-badge{margin-left:6px;font-size:11px;background:#ffeab9;border:1px solid #f3c35f;border-radius:6px;padding:2px 6px;color:#825a00;}
+
+    body { margin:0; font-family:'Noto Sans KR',sans-serif; background-color:#fff0f3; }
+    .header { display:flex; justify-content:space-between; align-items:center; padding:10px 20px; border-bottom:2px solid #000; }
+    .nav-container { flex:1; display:flex; justify-content:center; }
+    .nav { display:flex; gap:80px; font-size:14px; }
+    .nav a { text-decoration:none; color:black; }
+    .nav a:hover { font-weight:bold; }
+    .login { background:#fce4ec; padding:5px 15px; border-radius:10px; font-size:14px; cursor:pointer; }
+
+    /* 통일된 nav-bar */
+    .nav-bar {
+      background:#ffcbd6; display:flex; justify-content:space-around; align-items:center;
+      height:48px; font-size:14px; margin:20px; border-radius:10px;
+      border:2px solid #f9aebe; box-shadow:0 2px 5px rgba(0,0,0,.05); overflow:hidden;
+    }
+    .nav-bar a {
+      flex:1; text-align:center; text-decoration:none; color:black; padding:10px 0;
+      border-right:1px solid #d999aa; transition:all .2s ease;
+    }
+    .nav-bar a:last-child { border-right:none; }
+    .nav-bar a:hover { background:#fdd8e1; font-weight:bold; }
+    .nav-bar a.active { font-weight:bold; background:#f9aebe; color:#fff; }
+
+    .main { padding:30px; }
+
+    /* 통일된 square */
+    .square {
+      background:#FFDDE3; padding:30px; border-radius:10px;
+      border:2px solid #f9aebe; box-shadow:0 2px 5px rgba(0,0,0,.05); margin-top:20px;
+    }
+    h2 { margin-top:0; color:#5b3b3b; font-size:22px; }
+
+    .search-bar { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:20px; }
+    .post_text { font-size:22px; font-weight:bold; white-space:nowrap; color:#5b3b3b; }
+    .search-group { display:flex; flex:1; justify-content:flex-end; max-width:400px; }
+    .search-input { padding:8px; border:none; background:#fff; border-radius:5px 0 0 5px; flex:1; box-sizing:border-box; }
+    .search-button { background:#fff; border:none; border-radius:0 5px 5px 0; padding:8px; cursor:pointer; }
+
+    /* 필터 칩 */
+    .cate, .subcate { display:flex; gap:10px; }
+    .ch {
+      border:none; cursor:pointer; font-size:15px; background:#FFDDE3; color:#000;
+      padding:6px 16px; border-right:1px solid #d999aa; border-radius:18px; transition:background .2s;
+    }
+    .ch:hover { background:#f08ca0; color:#fff; }
+    .ch.active { background:#f9aebe; color:#fff; }
+
+    /* 카드 리스트 */
+    .post-list { display:flex; flex-direction:column; gap:15px; height:500px; overflow-y:auto; }
+    .post a { text-decoration:none; color:inherit; display:flex; justify-content:space-between; align-items:center; width:100%; }
+    .post {
+      background:#fff; padding:15px; border-radius:10px; border:1px solid #f9aebe;
+      box-shadow:0 2px 5px rgba(0,0,0,.05); display:flex; justify-content:space-between; align-items:center;
+      transition:background .2s, transform .1s; position:relative;
+    }
+    .post:hover { background:#fff3f5; transform:translateY(-1px); }
+    .post-title { font-weight:bold; font-size:16px; }
+    .post-info { font-size:12px; color:gray; text-align:right; }
+
+    .wjg { text-decoration:none; color:#000; padding:10px 20px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <a href="index.html" class="wjg"><b>원주여자고등학교</b></a>
+    <div class="nav-container">
+      <div class="nav">
+        <a href="posts.html" class="active">게시판</a>
+        <a href="notice.html">공지사항</a>
+        <a href="inquiry.html">문의하기</a>
+      </div>
+    </div>
+    <div class="login">로그인</div>
+  </div>
+
+  <div class="nav-bar">
+    <a href="posts.html" class="active">게시글 보기</a>
+    <a href="my-posts.html">내 게시글 보기</a>
+    <a href="write-post.html">게시물 작성</a>
+  </div>
+
+  <div class="main">
+    <div class="square">
+      <div class="search-bar">
+        <div class="post_text">게시글 보기</div>
+
+        <!-- 학년 필터 -->
+        <div class="cate">
+          <button class="ch grade active" data-grade="ALL">전체(학년)</button>
+          <button class="ch grade" data-grade="1학년">1학년</button>
+          <button class="ch grade" data-grade="2학년">2학년</button>
+          <button class="ch grade" data-grade="3학년">3학년</button>
+        </div>
+
+        <!-- 세부 카테고리 필터 -->
+        <div class="subcate">
+          <button class="ch sub active" data-sub="ALL">전체(세부)</button>
+          <button class="ch sub" data-sub="정보 공유">정보 공유</button>
+          <button class="ch sub" data-sub="학습 도움">학습 도움</button>
+        </div>
+
+        <!-- 검색 -->
+        <div class="search-group">
+          <input type="text" class="search-input" placeholder="검색할 내용 입력">
+          <button class="search-button">🔍</button>
+        </div>
+      </div>
+
+      <div class="post-list"><!-- 게시글 출력 --></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import {
+      getFirestore, collection, getDocs, query, orderBy, deleteDoc, doc, getDoc, where,
+      setDoc, increment, limit
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCrxJuOjHGdttC2gfwfjqsvAjHicEav6BA",
+      authDomain: "wjgh-learningdataroom.firebaseapp.com",
+      projectId: "wjgh-learningdataroom",
+      storageBucket: "wjgh-learningdataroom.firebasestorage.app",
+      messagingSenderId: "284248567704",
+      appId: "1:284248567704:web:88e70e08666e13ff80c5ed"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    signInAnonymously(auth).catch(console.warn);
+    const db = getFirestore(app);
+
+    const API_BASE = "http://127.0.0.1:5000";
+    const postList = document.querySelector(".post-list");
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    let allPosts = [];
+    let selectedGrade = "ALL";
+    let selectedSub = "ALL";
+    let searchKeyword = "";
+
+    /* 점수 → 이모지 */
+    function scoreEmoji(score) {
+      if (score >= 20) return "🔥";
+      if (score >= 10) return "🌟";
+      if (score >= 5)  return "👍";
+      return "";
+    }
+
+    /* 작성자 점수/핫 캐시 */
+    const scoreCache = new Map();  // key -> number
+    const hotCache   = new Map();  // key -> boolean
+
+    async function lookupUserDocBy(post) {
+      // 1) writerId
+      if (post.writerId) {
+        return await getDoc(doc(db, "users", String(post.writerId)));
+      }
+      // 2) name
+      if (post.writer) {
+        const qs = await getDocs(query(collection(db, "users"), where("name","==", post.writer), limit(1)));
+        if (!qs.empty) return qs.docs[0];
+      }
+      // 3) nickname
+      if (post.nickname) {
+        const qs = await getDocs(query(collection(db, "users"), where("nickname","==", post.nickname), limit(1)));
+        if (!qs.empty) return qs.docs[0];
+      }
+      return null;
+    }
+
+    async function lookupScoreForPost(post) {
+      const key =
+        post.writerId ? `id:${post.writerId}` :
+        post.writer   ? `name:${post.writer}` :
+        post.nickname ? `nick:${post.nickname}` : "";
+
+      if (!key) return 0;
+      if (scoreCache.has(key)) return scoreCache.get(key);
+
+      const snap = await lookupUserDocBy(post);
+      const val = (snap && snap.exists()) ? (snap.data().score || 0) : 0;
+      scoreCache.set(key, val);
+      return val;
+    }
+
+    async function lookupHotForPost(post) {
+      const key =
+        post.writerId ? `id:${post.writerId}` :
+        post.writer   ? `name:${post.writer}` :
+        post.nickname ? `nick:${post.nickname}` : "";
+
+      if (!key) return false;
+      if (hotCache.has(key)) return hotCache.get(key);
+
+      const snap = await lookupUserDocBy(post);
+      const val = (snap && snap.exists()) ? !!snap.data().hotMember : false;
+      hotCache.set(key, val);
+      return val;
+    }
+
+    async function enrichUsers(posts) {
+      await Promise.all(posts.map(async (p) => {
+        try {
+          p.score = await lookupScoreForPost(p);
+          p.isHot = await lookupHotForPost(p);
+        } catch {
+          p.score = 0; p.isHot = false;
+        }
+      }));
+    }
+
+    /* 🔻 삭제 시 점수 차감 */
+    async function adjustScoreForDeletedPost(postData) {
+      if (!postData) return;
+      const sub = postData.subcategory || "미분류";
+      let delta = 0;
+      if (sub === "정보 공유") delta = -2;
+      else if (sub === "학습 도움") delta = -1;
+      else delta = 0;
+      if (delta === 0) return;
+
+      let userRef = null;
+      if (postData.writerId) {
+        userRef = doc(db, "users", String(postData.writerId));
+      } else {
+        if (!userRef && postData.writer) {
+          const qs = await getDocs(query(collection(db, "users"), where("name","==", postData.writer), limit(1)));
+          if (!qs.empty) userRef = doc(db, "users", qs.docs[0].id);
+        }
+        if (!userRef && postData.nickname) {
+          const qs = await getDocs(query(collection(db, "users"), where("nickname","==", postData.nickname), limit(1)));
+          if (!qs.empty) userRef = doc(db, "users", qs.docs[0].id);
+        }
+      }
+      if (!userRef) return;
+      await setDoc(userRef, { score: increment(delta) }, { merge: true });
+    }
+
+    async function fetchPosts() {
+      const qy = query(collection(db, "posts"), orderBy("createdAt", "desc"));
+      const qs = await getDocs(qy);
+      allPosts = [];
+      qs.forEach((d) => {
+        const data = d.data();
+        allPosts.push({
+          id: d.id,
+          title: data.title || "제목 없음",
+          nickname: data.nickname || "익명",
+          grade: data.grade || "학년 미입력",
+          subcategory: data.subcategory || "미분류",
+          writerId: data.writerId || "",
+          writer: data.writer || "",
+          date: data.createdAt?.toDate?.().toLocaleDateString("ko-KR") || "날짜 없음",
+          score: 0,
+          isHot: false
+        });
+      });
+
+      applyFilters();               // 1차 렌더
+      await enrichUsers(allPosts);  // 점수/핫 채우기
+      applyFilters();               // 2차 렌더
+    }
+
+    function applyFilters() {
+      let rows = [...allPosts];
+      if (selectedGrade !== "ALL") rows = rows.filter(p => p.grade === selectedGrade);
+      if (selectedSub !== "ALL") rows = rows.filter(p => p.subcategory === selectedSub);
+      if (searchKeyword) {
+        const kw = searchKeyword.toLowerCase();
+        rows = rows.filter(p => (p.title || "").toLowerCase().includes(kw));
+      }
+      renderPosts(rows);
+    }
+
+    function renderPosts(posts) {
+      postList.innerHTML = "";
+      posts.forEach((post) => {
+        const hot = post.isHot ? `<span class="hot-badge">HOT</span>` : "";
+        const emoji = scoreEmoji(post.score || 0);
+        const div = document.createElement("div");
+        div.className = "post";
+        div.innerHTML = `
+          <a href="view-post.html?id=${post.id}">
+            <div>
+              <div class="post-title">${post.title}</div>
+              <div class="post-info">
+                ${post.nickname} ${hot} ${emoji} ｜ ${post.grade} ｜ ${post.subcategory}
+              </div>
+            </div>
+            <div class="post-info">${post.date}</div>
+          </a>
+          ${user && user.role === "admin" ? `<span class="delete-btn" data-id="${post.id}" title="삭제">🗑</span>` : ""}
+        `;
+        postList.appendChild(div);
+      });
+      if (posts.length === 0) postList.innerHTML = "<div style='color:#777'>표시할 게시글이 없습니다.</div>";
+    }
+
+    // (관리자) 삭제: 점수 차감 → 첨부 삭제 → 문서 삭제
+    document.addEventListener("click", async (e) => {
+      if (!e.target.classList.contains("delete-btn")) return;
+      const id = e.target.getAttribute("data-id");
+      if (!confirm("정말 삭제하시겠습니까? 첨부파일도 함께 삭제됩니다.")) return;
+
+      try {
+        const snap = await getDoc(doc(db, "posts", id));
+        const data = snap.exists() ? snap.data() : null;
+
+        await adjustScoreForDeletedPost(data);
+
+        if (data?.attachment?.key) {
+          await fetch(`${API_BASE}/api/delete?key=${encodeURIComponent(data.attachment.key)}`, { method: "DELETE" })
+            .catch(err => console.warn("첨부 삭제 실패(무시 가능):", err));
+        }
+
+        await deleteDoc(doc(db, "posts", id));
+        alert("삭제되었습니다.");
+        location.reload();
+      } catch (err) {
+        console.error(err);
+        alert("삭제 중 오류가 발생했습니다.");
+      }
+    });
+
+    // 필터 버튼
+    const gradeBtns = document.querySelectorAll(".grade");
+    gradeBtns.forEach(btn => btn.addEventListener("click", () => {
+      gradeBtns.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      selectedGrade = btn.dataset.grade || "ALL";
+      applyFilters();
+    }));
+    const subBtns = document.querySelectorAll(".sub");
+    subBtns.forEach(btn => btn.addEventListener("click", () => {
+      subBtns.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      selectedSub = btn.dataset.sub || "ALL";
+      applyFilters();
+    }));
+
+    // 검색
+    const input = document.querySelector(".search-input");
+    input.addEventListener("input", () => {
+      searchKeyword = input.value.trim();
+      applyFilters();
+    });
+
+    fetchPosts();
+  </script>
+
+  <script type="module">
+    document.addEventListener("DOMContentLoaded", () => {
+      const userStr = localStorage.getItem("user");
+      const loginDiv = document.querySelector(".login");
+      if (userStr) {
+        const u = JSON.parse(userStr);
+        loginDiv.textContent = `${u.name}님 환영합니다`;
+        loginDiv.style.fontWeight = "bold";
+        loginDiv.style.cursor = "default";
+        loginDiv.addEventListener("click", () => {
+          if (confirm("로그아웃 하시겠습니까?")) {
+            localStorage.removeItem("user"); location.reload();
+          }
+        });
+      } else {
+        loginDiv.textContent = "로그인";
+        loginDiv.style.cursor = "pointer";
+        loginDiv.addEventListener("click", () => location.href = "login.html");
+      }
+    });
+  </script>
+</body>
+</html>

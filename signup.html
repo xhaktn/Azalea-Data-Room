@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>회원가입 - 원주여자고등학교</title>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCrxJuOjHGdttC2gfwfjqsvAjHicEav6BA",
+      authDomain: "wjgh-learningdataroom.firebaseapp.com",
+      projectId: "wjgh-learningdataroom",
+      storageBucket: "wjgh-learningdataroom.firebasestorage.app",
+      messagingSenderId: "284248567704",
+      appId: "1:284248567704:web:88e70e08666e13ff80c5ed"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.signup = async function () {
+      const name = document.getElementById("name").value;
+      const grade = document.getElementById("grade").value;
+      const classNum = document.getElementById("class").value;
+      const phone = document.getElementById("phone").value;
+      const nickname = document.getElementById("nickname").value;
+      const id = document.getElementById("id").value;
+      const pw = document.getElementById("pw").value;
+
+      if (!name || !id || !pw) {
+        alert("이름, 아이디, 비밀번호는 필수입니다.");
+        return;
+      }
+
+      await addDoc(collection(db, "users"), {
+        name,
+        grade,
+        class: classNum,
+        phone,
+        nickname,
+        id,
+        pw,
+        role: "user"
+      });
+
+      alert("회원가입이 완료되었습니다! 로그인 페이지로 이동합니다.");
+      window.location.href = "login.html";
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background-color: #fff0f3;
+      margin: 0;
+      padding: 0;
+    }
+    .back {
+      padding: 20px;
+      font-size: 14px;
+    }
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 80vh;
+    }
+    .signup-box {
+      background-color: #ffffff;
+      padding: 40px;
+      border: 1px solid #333;
+      border-radius: 10px;
+      width: 500px;
+      box-sizing: border-box;
+    }
+    .signup-box h2 {
+      text-align: center;
+      color: #5b3b3b;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #333;
+      font-size: 14px;
+    }
+    .form-row {
+      display: flex;
+      gap: 10px;
+    }
+    .form-row .form-group {
+      flex: 1;
+    }
+    .signup-btn {
+      width: 100%;
+      background-color: #f9aebe;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .signup-btn:hover {
+      background-color: #f08ca0;
+    }
+  </style>
+</head>
+<body>
+  <div class="back"><a href="javascript:history.back()">← 뒤로가기</a></div>
+  <div class="container">
+    <div class="signup-box">
+      <h2>회원가입</h2>
+      <div class="form-group">
+        <label>이름</label>
+        <input type="text" id="name" placeholder="이름 입력">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>학년</label>
+          <select id="grade"><option>1</option><option>2</option><option>3</option></select>
+        </div>
+        <div class="form-group">
+          <label>반</label>
+          <select id="class">
+            <option>1</option><option>2</option><option>3</option><option>4</option>
+            <option>5</option><option>6</option><option>7</option><option>8</option>
+            <option>9</option><option>10</option><option>11</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>전화번호</label>
+        <input type="text" id="phone" placeholder="010-0000-0000">
+      </div>
+      <div class="form-group">
+        <label>닉네임</label>
+        <input type="text" id="nickname" placeholder="닉네임 입력">
+      </div>
+      <div class="form-group">
+        <label>아이디</label>
+        <input type="text" id="id" placeholder="아이디 입력">
+      </div>
+      <div class="form-group">
+        <label>비밀번호</label>
+        <input type="password" id="pw" placeholder="비밀번호 입력">
+      </div>
+      <button class="signup-btn" onclick="signup()">회원가입</button>
+    </div>
+  </div>
+</body>
+</html>

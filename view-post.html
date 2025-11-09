@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1024" />
+  <title>게시글 보기 - 원주여자고등학교</title>
+  <style>
+    .hot-badge{margin-left:6px;font-size:11px;background:#ffeab9;border:1px solid #f3c35f;border-radius:6px;padding:2px 6px;color:#825a00;}
+
+    body { margin: 0; font-family: 'Noto Sans KR', sans-serif; background:#fff0f3; }
+    .header { display:flex; justify-content:space-between; align-items:center; padding:10px 20px; border-bottom:2px solid #000; }
+    .header h1 { font-size: 18px; margin: 0; }
+    .nav-container { flex:1; display:flex; justify-content:center; }
+    .nav { display:flex; gap:80px; font-size:14px; }
+    .nav a { text-decoration:none; color:#000; }
+    .nav a:hover { font-weight: bold; }
+    .login { background:#fce4ec; padding:5px 15px; border-radius:10px; font-size:14px; cursor:pointer; }
+
+    /* 통일된 nav-bar */
+    .nav-bar {
+      background-color: #ffcbd6;
+      display: flex; justify-content: space-around; align-items: center;
+      height: 48px; font-size: 14px; margin: 20px; border-radius: 10px;
+      border: 2px solid #f9aebe; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); overflow: hidden;
+    }
+    .nav-bar a {
+      flex: 1; text-align: center; text-decoration: none; color: black;
+      padding: 10px 0; border-right: 1px solid #d999aa; transition: all 0.2s ease;
+    }
+    .nav-bar a:last-child { border-right: none; }
+    .nav-bar a:hover { background-color: #fdd8e1; font-weight: bold; }
+    .nav-bar a.active { font-weight: bold; background-color: #f9aebe; color: white; border-radius: 0; }
+
+    .main { padding:30px; }
+    .square {
+      background:#FFDDE3; padding:30px; border-radius:10px;
+      box-shadow:0 2px 5px rgba(0,0,0,.05); border:2px solid #f9aebe; margin-top:20px;
+    }
+
+    .title { font-size:24px; color:#5b3b3b; margin:0 0 6px 0; }
+    .meta { font-size:13px; color:#666; margin-bottom:18px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .badge { display:inline-block; padding:2px 8px; border-radius:12px; font-size:12px; background:#ffe1e8; border:1px solid #f4a2b5; color:#5b3b3b; }
+    .score-badge { font-weight:600; color:#e35f7a; background:#fff; border:1px solid #f4a2b5; border-radius:999px; padding:1px 8px; }
+    .content { white-space:pre-wrap; line-height:1.6; }
+    .btn-download {
+      display:inline-block; background:#f08ca0; color:#fff; padding:8px 12px;
+      border-radius:6px; text-decoration:none; margin-top:14px;
+    }
+    .btn-download:hover { background:#e46f87; }
+
+    .wjg{ text-decoration: none; color: #000; padding: 10px 20px; }
+
+    /* 댓글 영역 */
+    .comment-section { margin-top:26px; }
+    .comment-title { margin:0 0 10px 0; font-size:18px; color:#5b3b3b; display:flex; align-items:center; gap:8px; }
+    .comment-list {
+      display:flex; flex-direction:column; gap:10px;
+      background:#fff; border-radius:10px; padding:14px; border:1px solid #f9aebe;
+      max-height:320px; overflow-y:auto;
+    }
+    .comment {
+      background:#fff; border:1px solid #f2b6c4; border-radius:10px; padding:10px 12px;
+      display:flex; justify-content:space-between; align-items:flex-start; gap:10px;
+    }
+    .comment-body { white-space:pre-wrap; line-height:1.5; color:#333; }
+    .comment-meta { font-size:12px; color:#777; margin-bottom:6px; }
+    .comment-actions { user-select:none; }
+    .comment-del { display:none; cursor:pointer; user-select:none; font-size:16px; line-height:1; padding:4px 6px; border-radius:6px; }
+    .comment-del.show { display:inline-block; }
+    .comment-del:hover { background:#ffe3ea; }
+
+    .comment-form { margin-top:12px; display:flex; gap:8px; align-items:flex-start; }
+    .comment-input { flex:1; min-height:70px; resize:vertical; border-radius:10px; border:1px solid #f4a2b5; padding:10px; font-size:14px; box-sizing:border-box; background:#fff; }
+    .comment-submit { background:#f9aebe; color:#fff; border:1px solid #f4a2b5; border-radius:10px; padding:10px 14px; cursor:pointer; font-size:14px; }
+    .comment-submit:hover { background:#f08ca0; }
+    .muted { color:#777; font-size:13px; }
+  </style>
+</head>
+<body style="overflow:none">
+  <div class="header">
+    <a href="index.html" class="wjg"><b>원주여자고등학교</b></a>
+    <div class="nav-container">
+      <div class="nav">
+        <a href="posts.html">게시판</a>
+        <a href="notice.html">공지사항</a>
+        <a href="inquiry.html">문의하기</a>
+      </div>
+    </div>
+    <div class="login">로그인</div>
+  </div>
+
+  <div class="nav-bar">
+    <a href="posts.html" class="active">게시글 보기</a>
+    <a href="my-posts.html">내 게시글 보기</a>
+    <a href="write-post.html">게시물 작성</a>
+  </div>
+
+  <div class="main">
+    <div class="square">
+      <h2 id="post-title" class="title">제목 로딩중…</h2>
+
+      <!-- 닉네임 (점수/배지/HOT) ｜ 학년 ｜ 카테고리 ｜ 날짜 -->
+      <div id="post-meta" class="meta"><span>메타 로딩중…</span></div>
+
+      <div id="post-content" class="content">내용 로딩중…</div>
+
+      <!-- 첨부 다운로드 -->
+      <div id="attachmentArea"></div>
+
+      <!-- 댓글 영역 -->
+      <div class="comment-section">
+        <h3 class="comment-title">댓글</h3>
+        <div id="comments" class="comment-list"></div>
+
+        <!-- 로그인 사용자만 노출되는 입력폼 -->
+        <div id="commentForm" class="comment-form" style="display:none;">
+          <textarea id="commentInput" class="comment-input" placeholder="댓글을 입력하세요"></textarea>
+          <button id="commentSubmit" class="comment-submit">등록</button>
+        </div>
+        <div id="commentHint" class="muted" style="margin-top:6px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase + Firestore -->
+  <script type="module">
+    import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import {
+      getFirestore, doc, getDoc, collection, addDoc, serverTimestamp,
+      query, orderBy, onSnapshot, deleteDoc, where, getDocs
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+    // Firebase 초기화
+    const firebaseConfig = {
+      apiKey: "AIzaSyCrxJuOjHGdttC2gfwfjqsvAjHicEav6BA",
+      authDomain: "wjgh-learningdataroom.firebaseapp.com",
+      projectId: "wjgh-learningdataroom",
+      storageBucket: "wjgh-learningdataroom.firebasestorage.app",
+      messagingSenderId: "284248567704",
+      appId: "1:284248567704:web:88e70e08666e13ff80c5ed"
+    };
+    const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+
+    // 익명 로그인
+    const auth = getAuth(app);
+    signInAnonymously(auth).catch(()=>{});
+    const db = getFirestore(app);
+
+    // 로그인 UI
+    let currentUser = null; // { id, name, nickname, role }
+    document.addEventListener("DOMContentLoaded", () => {
+      const userStr = localStorage.getItem("user");
+      const loginDiv = document.querySelector(".login");
+      if (userStr) {
+        currentUser = JSON.parse(userStr);
+        loginDiv.textContent = `${currentUser.name}님 환영합니다`;
+        loginDiv.style.fontWeight = "bold";
+        loginDiv.style.cursor = "default";
+        loginDiv.addEventListener("click", () => {
+          if (confirm("로그아웃 하시겠습니까?")) {
+            localStorage.removeItem("user");
+            location.reload();
+          }
+        });
+      } else {
+        loginDiv.textContent = "로그인";
+        loginDiv.style.cursor = "pointer";
+        loginDiv.addEventListener("click", () => location.href = "login.html");
+      }
+    });
+
+    // URL ?id=
+    function getParam(name) {
+      const u = new URL(location.href);
+      return u.searchParams.get(name);
+    }
+    const API_BASE = "http://127.0.0.1:5000";
+
+    async function makeDownloadButton(attachment) {
+      const area = document.getElementById("attachmentArea");
+      area.innerHTML = "";
+      if (!attachment || !attachment.key) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/api/files?key=${encodeURIComponent(attachment.key)}`);
+        const data = await res.json();
+        if (!res.ok || !data.url) return;
+
+        const a = document.createElement("a");
+        a.className = "btn-download";
+        a.href = data.url;
+        a.textContent = `첨부 다운로드 (${attachment.filename || "file"})`;
+        a.download = attachment.filename || "file";
+        area.appendChild(a);
+      } catch (e) {
+        console.warn("첨부 링크 생성 실패:", e);
+      }
+    }
+
+    // 점수 → 이모지
+    function scoreEmoji(score){
+      if (score >= 20) return "🔥";
+      if (score >= 10) return "🌟";
+      if (score >= 5)  return "👍";
+      return "";
+    }
+
+    // 작성자 점수 + HOT 조회
+    async function fetchWriterInfo(post) {
+      // 1) writerId 우선
+      if (post.writerId) {
+        const s = await getDoc(doc(db, "users", String(post.writerId)));
+        if (s.exists()) return { score: s.data().score || 0, isHot: !!s.data().hotMember };
+      }
+      // 2) name
+      if (post.writer) {
+        const qs = await getDocs(query(collection(db, "users"), where("name","==", post.writer)));
+        if (!qs.empty) {
+          const d = qs.docs[0].data();
+          return { score: d.score || 0, isHot: !!d.hotMember };
+        }
+      }
+      // 3) nickname
+      if (post.nickname) {
+        const qs = await getDocs(query(collection(db, "users"), where("nickname","==", post.nickname)));
+        if (!qs.empty) {
+          const d = qs.docs[0].data();
+          return { score: d.score || 0, isHot: !!d.hotMember };
+        }
+      }
+      return { score:0, isHot:false };
+    }
+
+    // 게시글 로드
+    const postId = getParam("id");
+    let postData = null;
+
+    (async () => {
+      if (!postId) {
+        document.getElementById("post-title").textContent = "잘못된 접근입니다.";
+        document.getElementById("post-content").textContent = "";
+        return;
+      }
+
+      const snap = await getDoc(doc(db, "posts", postId));
+      if (!snap.exists()) {
+        document.getElementById("post-title").textContent = "게시글을 찾을 수 없습니다.";
+        document.getElementById("post-content").textContent = "";
+        return;
+      }
+
+      postData = snap.data();
+
+      document.getElementById("post-title").textContent = postData.title || "제목 없음";
+
+      const dateStr = postData.createdAt?.toDate
+        ? postData.createdAt.toDate().toLocaleDateString("ko-KR")
+        : "날짜 없음";
+      const nickname = postData.nickname || "익명";
+      const grade = postData.grade || "학년 없음";
+      const subcat = postData.subcategory || "미분류";
+
+      // 작성자 점수/HOT
+      let info = { score:0, isHot:false };
+      try { info = await fetchWriterInfo(postData); } catch(e){}
+
+      const emoji = scoreEmoji(info.score);
+      const hot   = info.isHot ? `<span class="hot-badge">HOT</span>` : "";
+      const scoreHtml = `<span class="score-badge">${info.score}점 ${emoji}</span>`;
+
+      const meta = document.getElementById("post-meta");
+      meta.innerHTML = `
+        <span>${nickname} ${scoreHtml} ${hot}</span>
+        <span>｜</span>
+        <span>${grade}</span>
+        <span>｜</span>
+        <span class="badge">${subcat}</span>
+        <span>｜</span>
+        <span>${dateStr}</span>
+      `;
+
+      document.getElementById("post-content").textContent = postData.content || "";
+
+      await makeDownloadButton(postData.attachment);
+
+      // 댓글 폼 노출 제어
+      const formBox = document.getElementById("commentForm");
+      const hint = document.getElementById("commentHint");
+      if (currentUser) {
+        formBox.style.display = "flex";
+        hint.textContent = "";
+      } else {
+        formBox.style.display = "none";
+        hint.innerHTML = `댓글을 작성하려면 <a href="login.html" style="color:#e46f87; text-decoration:none;">로그인</a>이 필요합니다.`;
+      }
+
+      // 댓글 로드
+      initComments();
+    })();
+
+    // 댓글 실시간 로드
+    function initComments() {
+      const listEl = document.getElementById("comments");
+      listEl.innerHTML = "<div class='muted'>댓글을 불러오는 중…</div>";
+
+      const q = query(collection(db, "posts", postId, "comments"), orderBy("createdAt", "asc"));
+
+      onSnapshot(q, (snap) => {
+        listEl.innerHTML = "";
+        if (snap.empty) {
+          listEl.innerHTML = "<div class='muted'>첫 댓글을 남겨보세요!</div>";
+          return;
+        }
+
+        snap.forEach((d) => {
+          const c = d.data();
+          const id = d.id;
+
+          const who = c.writerName || "익명";
+          const when = c.createdAt?.toDate ? c.createdAt.toDate().toLocaleString("ko-KR") : "";
+
+          const wrapper = document.createElement("div");
+          wrapper.className = "comment";
+          wrapper.innerHTML = `
+            <div style="flex:1;">
+              <div class="comment-meta">${who} ｜ ${when}</div>
+              <div class="comment-body">${(c.content || "").replace(/</g,"&lt;")}</div>
+            </div>
+            <div class="comment-actions">
+              <span class="comment-del" title="삭제" data-id="${id}">🗑</span>
+            </div>
+          `;
+
+          const delBtn = wrapper.querySelector(".comment-del");
+          const canDelete =
+            (currentUser && (currentUser.id && currentUser.id === c.writerId)) ||
+            (currentUser && currentUser.role === "admin");
+          if (canDelete) delBtn.classList.add("show");
+
+          listEl.appendChild(wrapper);
+        });
+      });
+    }
+
+    // 댓글 작성
+    document.getElementById("commentSubmit").addEventListener("click", addComment);
+    document.getElementById("commentInput").addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") addComment();
+    });
+
+    async function addComment() {
+      if (!currentUser) {
+        alert("로그인 후 이용하세요.");
+        location.href = "login.html";
+        return;
+      }
+      const ta = document.getElementById("commentInput");
+      const content = (ta.value || "").trim();
+      if (!content) return;
+
+      try {
+        await addDoc(collection(db, "posts", postId, "comments"), {
+          content,
+          writerName: currentUser.nickname || currentUser.name || "익명",
+          writerId: currentUser.id || currentUser.name || "",
+          createdAt: serverTimestamp()
+        });
+        ta.value = "";
+      } catch (e) {
+        console.error(e);
+        alert("댓글 작성 중 오류가 발생했습니다.");
+      }
+    }
+
+    // 댓글 삭제
+    document.addEventListener("click", async (e) => {
+      const btn = e.target.closest(".comment-del");
+      if (!btn) return;
+      const id = btn.getAttribute("data-id");
+      if (!id) return;
+      if (!currentUser) {
+        alert("로그인 후 이용하세요.");
+        return;
+      }
+      if (!confirm("이 댓글을 삭제할까요?")) return;
+      try {
+        await deleteDoc(doc(db, "posts", postId, "comments", id));
+      } catch (err) {
+        console.error(err);
+        alert("댓글 삭제 중 오류가 발생했습니다.");
+      }
+    });
+  </script>
+</body>
+</html>

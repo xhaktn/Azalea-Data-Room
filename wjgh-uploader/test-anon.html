@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+  <body>
+    <h1>Firebase Anonymous Test</h1>
+    <p>F12 → Console에서 로그를 확인하세요.</p>
+
+    <script type="module">
+      // 네가 기존에 쓰는 firebaseConfig 그대로 복사해 넣으세요
+      import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+      import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+
+      const firebaseConfig = {
+      apiKey: "AIzaSyCrxJuOjHGdttC2gfwfjqsvAjHicEav6BA",
+      authDomain: "wjgh-learningdataroom.firebaseapp.com",
+      projectId: "wjgh-learningdataroom",
+      storageBucket: "wjgh-learningdataroom.firebasestorage.app",
+      messagingSenderId: "284248567704",
+      appId: "1:284248567704:web:88e70e08666e13ff80c5ed"
+    };
+
+      // 이미 초기화되어 있으면 재초기화 안 함(중복 방지)
+      const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+
+      signInAnonymously(auth)
+        .then(() => console.log("✅ Signed in anonymously"))
+        .catch((e) => console.error("❌ Anonymous sign-in error:", e));
+    </script>
+  </body>
+</html>

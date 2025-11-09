@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1024">
+  <title>게시글 작성 - 원주여자고등학교</title>
+  <style>
+    body { margin:0; font-family:'Noto Sans KR',sans-serif; background:#fff0f3; }
+    .header{display:flex;justify-content:space-between;align-items:center;padding:10px 20px;border-bottom:2px solid #000;}
+    .nav-container{flex:1;display:flex;justify-content:center;}
+    .nav{display:flex;gap:80px;font-size:14px;}
+    .nav a{text-decoration:none;color:#000;}
+    .nav a:hover{font-weight:bold;}
+    .login{background:#fce4ec;padding:5px 15px;border-radius:10px;font-size:14px;cursor:pointer;}
+
+    .nav-bar {
+      background-color:#ffcbd6; display:flex; justify-content:space-around; align-items:center;
+      height:48px; font-size:14px; margin:20px; border-radius:10px;
+      border:2px solid #f9aebe; box-shadow:0 2px 5px rgba(0,0,0,.05); overflow:hidden;
+    }
+    .nav-bar a { flex:1; text-align:center; text-decoration:none; color:black; padding:10px 0; border-right:1px solid #d999aa; }
+    .nav-bar a:last-child{border-right:none;}
+    .nav-bar a.active { font-weight:bold; background:#f9aebe; color:#fff; }
+
+    .main{padding:30px;}
+    .square{
+      background:#FFDDE3; padding:30px; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,.05);
+      border:2px solid #f9aebe; margin-top:20px;
+    }
+    h2{margin-top:0; color:#5b3b3b; font-size:22px;}
+    .form-container{background:#fff; padding:30px; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,.05); display:flex; flex-direction:column; gap:16px;}
+    input[type="text"], textarea, select{
+      padding:10px; font-size:16px; border:1px solid #ccc; border-radius:6px; width:100%; box-sizing:border-box;
+    }
+    textarea{height:120px; resize:vertical;}
+    .submit-button{
+      background:#f9aebe; color:#fff; padding:10px 14px; border:none; border-radius:8px; font-size:16px; cursor:pointer; align-self:flex-end;
+    }
+    .submit-button:hover{background:#f08ca0;}
+    .note{font-size:13px; color:gray; line-height:1.6;}
+    .wjg{ text-decoration:none; color:#000; padding:10px 20px; }
+  </style>
+</head>
+<body style="overflow:none">
+  <div class="header">
+    <a href="index.html" class="wjg"><b>원주여자고등학교</b></a>
+    <div class="nav-container">
+      <div class="nav">
+        <a href="posts.html">게시판</a>
+        <a href="notice.html">공지사항</a>
+        <a href="inquiry.html">문의하기</a>
+      </div>
+    </div>
+    <div class="login">로그인</div>
+  </div>
+
+  <div class="nav-bar">
+    <a href="posts.html">게시글 보기</a>
+    <a href="my-posts.html">내 게시글 보기</a>
+    <a href="write-post.html" class="active">게시물 작성</a>
+  </div>
+
+  <div class="main">
+    <div class="square">
+      <h2>게시글 작성</h2>
+
+      <div class="form-container">
+        <!-- 학년 -->
+        <select id="grade">
+          <option value="">학년 선택</option>
+          <option value="1학년">1학년</option>
+          <option value="2학년">2학년</option>
+          <option value="3학년">3학년</option>
+        </select>
+
+        <!-- 세부 카테고리 -->
+        <select id="subcategory">
+          <option value="">세부 카테고리 선택</option>
+          <option value="정보 공유">정보 공유 (2점)</option>
+          <option value="학습 도움">학습 도움 (1점)</option>
+        </select>
+
+        <!-- 제목/내용 -->
+        <input type="text" id="title" placeholder="제목을 입력하세요" />
+        <textarea id="content" placeholder="내용을 입력하세요"></textarea>
+
+        <!-- 파일 첨부 -->
+        <input type="file" id="fileInput" accept="image/*,.pdf,.doc,.docx" />
+        <div class="note">
+          🔗 첨부파일 안내: <b style="color:#f08ca0;">이미지, PDF, 문서 파일</b> 업로드 가능<br/>
+          (대용량 파일은 외부 링크 사용 권장)
+        </div>
+
+        <button class="submit-button" id="btnSubmit">작성 완료</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import {
+      getFirestore, collection, addDoc, serverTimestamp,
+      doc, setDoc, increment
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+    // Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyCrxJuOjHGdttC2gfwfjqsvAjHicEav6BA",
+      authDomain: "wjgh-learningdataroom.firebaseapp.com",
+      projectId: "wjgh-learningdataroom",
+      storageBucket: "wjgh-learningdataroom.firebasestorage.app",
+      messagingSenderId: "284248567704",
+      appId: "1:284248567704:web:88e70e08666e13ff80c5ed"
+    };
+    const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    signInAnonymously(auth).catch(console.warn);
+    const db = getFirestore(app);
+
+    // 로그인 표시
+    document.addEventListener("DOMContentLoaded", () => {
+      const userStr = localStorage.getItem("user");
+      const loginDiv = document.querySelector(".login");
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        loginDiv.textContent = `${user.name}님 환영합니다`;
+        loginDiv.style.fontWeight = "bold";
+        loginDiv.style.cursor = "default";
+        loginDiv.addEventListener("click", () => {
+          if (confirm("로그아웃 하시겠습니까?")) { localStorage.removeItem("user"); location.reload(); }
+        });
+      } else {
+        loginDiv.textContent = "로그인";
+        loginDiv.style.cursor = "pointer";
+        loginDiv.addEventListener("click", () => location.href = "login.html");
+      }
+    });
+
+    // 파일 업로드(선택): 기존 MinIO 업로더를 쓰고 있다면 그대로 사용
+    const API_BASE = "http://127.0.0.1:5000";
+    async function uploadAttachmentIfAny() {
+      const file = document.getElementById("fileInput").files[0];
+      if (!file) return null;
+
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch(`${API_BASE}/upload`, { method: "POST", body: form });
+      if (!res.ok) throw new Error("파일 업로드 실패");
+      // 서버는 성공시 간단 메시지만 주고 있으므로, 키/파일명은 클라이언트가 직접 구성해서 저장
+      // MinIO 업로드에서 키를 파일명 그대로 썼으니 같은 이름으로 접근
+      return {
+        key: file.name,
+        filename: file.name
+      };
+    }
+
+    // 점수 적립
+    async function awardPoints(user, subcategory) {
+      const delta = subcategory === "정보 공유" ? 2 : (subcategory === "학습 도움" ? 1 : 0);
+      if (delta === 0) return;
+
+      const uid = user.id || user.name || user.nickname; // 문서 ID 후보
+      const userRef = doc(db, "users", String(uid));
+
+      await setDoc(
+        userRef,
+        {
+          id: user.id || "",
+          name: user.name || "",
+          nickname: user.nickname || "",
+          role: user.role || "student",
+          score: increment(delta),
+          // 최근 닉네임/이름 유지용
+          updatedAt: serverTimestamp()
+        },
+        { merge: true }
+      );
+    }
+
+    // 글 작성
+    document.getElementById("btnSubmit").addEventListener("click", submitPost);
+
+    async function submitPost() {
+      const user = JSON.parse(localStorage.getItem("user") || "null");
+      if (!user) {
+        alert("로그인한 사용자만 글을 작성할 수 있습니다.");
+        location.href = "login.html";
+        return;
+      }
+
+      const title = document.getElementById("title").value.trim();
+      const content = document.getElementById("content").value.trim();
+      const grade = document.getElementById("grade").value;
+      const subcategory = document.getElementById("subcategory").value;
+
+      if (!title || !content || !grade || !subcategory) {
+        alert("제목, 내용, 학년, 세부 카테고리를 모두 입력해주세요.");
+        return;
+      }
+
+      try {
+        // 1) 첨부 업로드(선택)
+        const attachment = await uploadAttachmentIfAny();
+
+        // 2) 글 저장
+        await addDoc(collection(db, "posts"), {
+          title,
+          content,
+          grade,
+          subcategory,                    // 🔸 세부카테고리 저장
+          writer: user.name || user.id,
+          writerId: user.id || "",        // 🔸 writerId 저장(랭킹/표시용)
+          nickname: user.nickname || "익명",
+          role: user.role || "student",
+          attachment: attachment || null,  // 🔸 첨부 메타
+          createdAt: serverTimestamp()
+        });
+
+        // 3) 점수 적립
+        await awardPoints(user, subcategory);
+
+        alert("게시글이 작성되었습니다! (점수 적립 완료)");
+        location.href = "posts.html";
+      } catch (e) {
+        console.error(e);
+        alert("작성 중 오류가 발생했습니다.");
+      }
+    }
+  </script>
+</body>
+</html>

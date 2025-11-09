@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1024" />
+  <title>전체 랭킹 - 원주여자고등학교</title>
+  <style>
+    body{margin:0;font-family:'Noto Sans KR',sans-serif;background:#fff0f3;}
+    .header{display:flex;justify-content:space-between;align-items:center;padding:10px 20px;border-bottom:2px solid #000;}
+    .nav-container{flex:1;display:flex;justify-content:center;}
+    .nav{display:flex;gap:80px;font-size:14px;}
+    .nav a{text-decoration:none;color:#000;}
+    .nav a:hover{font-weight:bold;}
+    .login{background:#fce4ec;padding:5px 15px;border-radius:10px;font-size:14px;cursor:pointer;}
+
+    .main{padding:30px;}
+    .square{
+      background:#FFDDE3;
+      padding:30px;
+      border-radius:10px;
+      box-shadow:0 2px 5px rgba(0,0,0,.05);
+      border:2px solid #f9aebe;
+      margin-top:20px;
+      max-width:900px;
+      margin-left:auto; margin-right:auto;
+    }
+
+    .toolbar{
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:16px;
+    }
+    .toolbar .title{font-size:22px;font-weight:700;color:#5b3b3b;margin-right:auto;}
+    .pill{background:#ffd2db;border:1px solid #f9aebe;border-radius:999px;padding:6px 12px;font-size:13px;}
+    .select, .search{
+      background:#fff;border:1px solid #f9aebe;border-radius:8px;padding:8px 10px;font-size:14px;
+    }
+    .search{min-width:240px;}
+
+    .ranking-list{display:flex;flex-direction:column;gap:10px;max-height:560px;overflow:auto;}
+    .rank-item{
+      display:flex;align-items:center;justify-content:space-between;
+      background:#fff;border:1px solid #f9aebe;border-radius:10px;padding:12px 14px;
+      box-shadow:0 2px 5px rgba(0,0,0,.05);
+    }
+    .rank-left{display:flex;align-items:center;gap:10px;}
+    .rank-medal{
+      width:32px;height:32px;display:flex;align-items:center;justify-content:center;
+      border-radius:50%;background:#ffe6ec;border:1px solid #f9aebe;font-weight:700;
+    }
+    .rank-name{font-weight:600;color:#333;}
+    .rank-meta{font-size:12px;color:#888;}
+    .rank-score-badge{font-size:13px;color:#5b3b3b;background:#fff8fb;border:1px solid #f9aebe;padding:4px 8px;border-radius:8px;}
+
+    .me-badge{margin-left:6px;font-size:11px;background:#fff3f7;border:1px solid #f9aebe;border-radius:6px;padding:2px 6px;color:#c4557a;}
+    .hot{margin-left:6px;font-size:11px;background:#ffeab9;border:1px solid #f3c35f;border-radius:6px;padding:2px 6px;color:#825a00;}
+
+    .more{display:block;margin:16px auto 0;background:#ffd2db;border:1px solid #f9aebe;border-radius:10px;padding:8px 14px;cursor:pointer;}
+    .more:hover{background:#fff3f5;}
+  </style>
+</head>
+<body>
+  <div class="header">
+    <a href="index.html" style="text-decoration:none;color:#000;padding:10px 20px;"><b>원주여자고등학교</b></a>
+    <div class="nav-container">
+      <div class="nav">
+        <a href="posts.html">게시판</a>
+        <a href="notice.html">공지사항</a>
+        <a href="inquiry.html">문의하기</a>
+      </div>
+    </div>
+    <div class="login">로그인</div>
+  </div>
+
+  <div class="main">
+    <div class="square">
+      <div class="toolbar">
+        <div class="title">전체 랭킹</div>
+        <!-- 보기 모드(전체/이번 달) — “이번 달 점수” 필드가 없으면 자동으로 전체만 -->
+        <select id="mode" class="select">
+          <option value="all" selected>전체 점수</option>
+          <option value="month">이번 달 점수</option>
+        </select>
+        <!-- 학년 필터 -->
+        <select id="grade" class="select">
+          <option value="ALL" selected>전체 학년</option>
+          <option value="1학년">1학년</option>
+          <option value="2학년">2학년</option>
+          <option value="3학년">3학년</option>
+        </select>
+        <!-- 검색 -->
+        <input id="q" class="search" type="text" placeholder="닉네임/이름 검색" />
+      </div>
+
+      <div id="list" class="ranking-list"></div>
+      <button id="btnMore" class="more" style="display:none;">더 보기</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import {
+      getFirestore, collection, query, orderBy, limit, getDocs
+    } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+    // === Firebase 기본 설정 (네 프로젝트 값) ===
+    const firebaseConfig = {
+      apiKey: "AIzaSyCrxJuOjHGdttC2gfwfjqsvAjHicEav6BA",
+      authDomain: "wjgh-learningdataroom.firebaseapp.com",
+      projectId: "wjgh-learningdataroom",
+      storageBucket: "wjgh-learningdataroom.firebasestorage.app",
+      messagingSenderId: "284248567704",
+      appId: "1:284248567704:web:88e70e08666e13ff80c5ed"
+    };
+    const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    signInAnonymously(auth).catch(()=>{});
+    const db = getFirestore(app);
+
+    // 로그인 배지/버튼
+    document.addEventListener("DOMContentLoaded", () => {
+      const userStr = localStorage.getItem("user");
+      const loginDiv = document.querySelector(".login");
+      if (userStr) {
+        const u = JSON.parse(userStr);
+        loginDiv.textContent = `${u.name}님 환영합니다`;
+        loginDiv.style.fontWeight = "bold";
+        loginDiv.style.cursor = "default";
+        loginDiv.addEventListener("click", () => {
+          if (confirm("로그아웃 하시겠습니까?")) { localStorage.removeItem("user"); location.reload(); }
+        });
+      } else {
+        loginDiv.textContent = "로그인";
+        loginDiv.style.cursor = "pointer";
+        loginDiv.addEventListener("click", () => location.href = "login.html");
+      }
+    });
+
+    // ===== 랭킹 로직 =====
+    const listEl = document.getElementById("list");
+    const btnMore = document.getElementById("btnMore");
+    const inputQ = document.getElementById("q");
+    const selGrade = document.getElementById("grade");
+    const selMode  = document.getElementById("mode");
+
+    // 점수 → 이모지
+    function scoreEmoji(score){
+      if (score >= 20) return "🔥";
+      if (score >= 10) return "🌟";
+      if (score >= 5)  return "👍";
+      return "";
+    }
+    // TOP3 메달
+    function rankMedal(n){
+      if (n===1) return "🥇";
+      if (n===2) return "🥈";
+      if (n===3) return "🥉";
+      return n;
+    }
+
+    let full = [];   // 전체 사용자(정렬 전)
+    let view = [];   // 필터+정렬 후
+    let shown = 0;   // 렌더링된 개수
+    const PAGE = 30; // 한 번에 렌더링할 개수
+
+    // 안전하게 점수 읽기: mode=all은 user.score, mode=month는 user.monthScore(없으면 0)
+    function pickScore(u){
+      if (selMode.value === "month"){
+        // 월별 점수를 user.monthScore / user.scores['YYYY-MM'] 같은 곳에 저장했다면 여기서 꺼내서 사용
+        // 현재는 호환용: u.monthScore 우선, 없으면 0
+        return Number(u.monthScore ?? 0);
+      }
+      return Number(u.score ?? 0);
+    }
+
+    function normalizeUser(d){
+      const data = d.data();
+      return {
+        id: d.id,
+        name: data.name || "",
+        nickname: data.nickname || "",
+        grade: data.grade || "",
+        score: Number(data.score ?? 0),
+        monthScore: Number(data.monthScore ?? 0),
+        isHot: Boolean(data.isHotMember || data.hot || false) // 열혈멤버 필드 호환
+      };
+    }
+
+    async function fetchUsers(){
+      full = [];
+      // 1) 기본: score 내림차순 상위 300명 시도
+      try{
+        const qy = query(collection(db, "users"), orderBy("score","desc"), limit(300));
+        const snap = await getDocs(qy);
+        snap.forEach(d => full.push(normalizeUser(d)));
+      }catch(e){
+        // 인덱스/권한 문제면 전체 가져와서 클라이언트 정렬
+        const snap = await getDocs(collection(db, "users"));
+        snap.forEach(d => full.push(normalizeUser(d)));
+      }
+      applyAndRender(true);
+    }
+
+    function applyFilters(){
+      const keyword = (inputQ.value || "").toLowerCase().trim();
+      const g = selGrade.value;
+
+      // 필터
+      view = full.filter(u => {
+        if (g !== "ALL" && u.grade !== g) return false;
+        if (keyword){
+          const hay = `${u.nickname} ${u.name}`.toLowerCase();
+          if (!hay.includes(keyword)) return false;
+        }
+        return true;
+      });
+
+      // 정렬 (선택 모드 기준 점수)
+      view.sort((a,b) => pickScore(b) - pickScore(a));
+    }
+
+    function render(reset=false){
+      if (reset){
+        listEl.innerHTML = "";
+        shown = 0;
+      }
+      const end = Math.min(shown + PAGE, view.length);
+      for (let i = shown; i < end; i++){
+        const u = view[i];
+        const rank = i + 1;
+        const medal = rankMedal(rank);
+        const score = pickScore(u);
+        const badge = scoreEmoji(score);
+        const name = (u.nickname || u.name || "이름없음");
+        const me = JSON.parse(localStorage.getItem("user") || "null");
+        const isMe = me && (me.nickname === u.nickname || me.name === u.name || me.id === u.id);
+
+        const row = document.createElement("div");
+        row.className = "rank-item";
+        row.innerHTML = `
+          <div class="rank-left">
+            <div class="rank-medal">${medal}</div>
+            <div>
+              <div class="rank-name">
+                ${name} ${badge} ${u.isHot ? '<span class="hot">열혈</span>': ''} ${isMe ? '<span class="me-badge">내 점수</span>' : ''}
+              </div>
+              <div class="rank-meta">${u.grade || ""}</div>
+            </div>
+          </div>
+          <div class="rank-score-badge">${score} 점</div>
+        `;
+        listEl.appendChild(row);
+      }
+      shown = end;
+      btnMore.style.display = (shown < view.length) ? "block" : "none";
+      if (view.length === 0){
+        listEl.innerHTML = "<div style='color:#777'>랭킹 데이터가 없습니다.</div>";
+        btnMore.style.display = "none";
+      }
+    }
+
+    function applyAndRender(reset=false){
+      applyFilters();
+      render(reset);
+    }
+
+    // 이벤트
+    inputQ.addEventListener("input", () => applyAndRender(true));
+    selGrade.addEventListener("change", () => applyAndRender(true));
+    selMode.addEventListener("change",  () => applyAndRender(true));
+    btnMore.addEventListener("click", () => render(false));
+
+    fetchUsers();
+  </script>
+</body>
+</html>

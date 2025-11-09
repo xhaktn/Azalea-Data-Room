@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1024" />
+<title>열혈멤버 관리</title>
+<style>
+  body{margin:0;font-family:'Noto Sans KR',sans-serif;background:#fff0f3;}
+  .header{display:flex;justify-content:space-between;align-items:center;padding:10px 20px;border-bottom:2px solid #000;}
+  .nav-container{flex:1;display:flex;justify-content:center;}
+  .nav{display:flex;gap:80px;font-size:14px;}
+  .nav a{text-decoration:none;color:#000;}
+  .nav a:hover{font-weight:bold;}
+  .login{background:#fce4ec;padding:5px 15px;border-radius:10px;font-size:14px;cursor:pointer;}
+
+  .main{padding:30px;}
+  .square{
+    background:#FFDDE3;padding:30px;border-radius:10px;
+    box-shadow:0 2px 5px rgba(0,0,0,.05); border:2px solid #f9aebe; margin-top:20px;
+    max-width:960px; margin-left:auto; margin-right:auto;
+  }
+  .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px;}
+  .title{font-size:22px;font-weight:700;color:#5b3b3b;margin-right:auto;}
+  .search{background:#fff;border:1px solid #f9aebe;border-radius:8px;padding:8px 10px;font-size:14px;min-width:280px;}
+  .list{display:flex;flex-direction:column;gap:10px;max-height:560px;overflow:auto;}
+  .card{
+    display:flex;justify-content:space-between;align-items:center;background:#fff;
+    border:1px solid #f9aebe;border-radius:10px;padding:12px 14px;box-shadow:0 2px 5px rgba(0,0,0,.05);
+  }
+  .meta{font-size:12px;color:#888;}
+  .btn{background:#ffd2db;border:1px solid #f9aebe;border-radius:8px;padding:6px 10px;cursor:pointer;}
+  .btn.hot{background:#ffeab9;border-color:#f3c35f;}
+  .badge-hot{margin-left:8px;font-size:11px;background:#ffeab9;border:1px solid #f3c35f;border-radius:6px;padding:2px 6px;color:#825a00;}
+</style>
+</head>
+<body>
+  <div class="header">
+    <a href="index.html" style="text-decoration:none;color:#000;padding:10px 20px;"><b>원주여자고등학교</b></a>
+    <div class="nav-container">
+      <div class="nav">
+        <a href="posts.html">게시판</a>
+        <a href="notice.html">공지사항</a>
+        <a href="inquiry.html">문의하기</a>
+      </div>
+    </div>
+    <div class="login">로그인</div>
+  </div>
+
+  <div class="main">
+    <div class="square">
+      <div class="toolbar">
+        <div class="title">열혈멤버 관리</div>
+        <input id="q" class="search" type="text" placeholder="닉네임/이름 검색" />
+      </div>
+      <div id="list" class="list"></div>
+    </div>
+  </div>
+
+<script type="module">
+  import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+  import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+  import { getFirestore, collection, getDocs, query, orderBy, limit, updateDoc, doc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+  // --- Admin gate ---
+  const me = JSON.parse(localStorage.getItem("user") || "null");
+  if (!me || me.role !== "admin") {
+    alert("관리자만 접근 가능합니다.");
+    location.href = "index.html";
+  }
+
+  // Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyCrxJuOjHGdttC2gfwfjqsvAjHicEav6BA",
+    authDomain: "wjgh-learningdataroom.firebaseapp.com",
+    projectId: "wjgh-learningdataroom",
+    storageBucket: "wjgh-learningdataroom.firebasestorage.app",
+    messagingSenderId: "284248567704",
+    appId: "1:284248567704:web:88e70e08666e13ff80c5ed"
+  };
+  const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  signInAnonymously(auth).catch(()=>{});
+  const db = getFirestore(app);
+
+  // 로그인 UI
+  document.addEventListener("DOMContentLoaded", () => {
+    const loginDiv = document.querySelector(".login");
+    loginDiv.textContent = `${me.name || "관리자"}님 환영합니다`;
+    loginDiv.style.fontWeight = "bold";
+  });
+
+  // 데이터
+  let all = [];
+  const listEl = document.getElementById("list");
+  const qEl = document.getElementById("q");
+
+  function normalize(d){
+    const x = d.data();
+    return {
+      id: d.id,
+      name: x.name || "",
+      nickname: x.nickname || "",
+      grade: x.grade || "",
+      score: Number(x.score ?? 0),
+      isHotMember: Boolean(x.isHotMember || false),
+    };
+  }
+
+  async function load(){
+    all = [];
+    try{
+      const qs = query(collection(db,"users"), orderBy("score","desc"), limit(300));
+      const snap = await getDocs(qs);
+      snap.forEach(d => all.push(normalize(d)));
+    }catch(e){
+      const snap = await getDocs(collection(db,"users"));
+      snap.forEach(d => all.push(normalize(d)));
+      all.sort((a,b)=> b.score - a.score);
+    }
+    render();
+  }
+
+  async function toggleHot(id, current){
+    try{
+      await updateDoc(doc(db,"users",id), { isHotMember: !current });
+      const idx = all.findIndex(u=>u.id===id);
+      if (idx>=0) all[idx].isHotMember = !current;
+      render();
+    }catch(e){
+      console.error(e);
+      alert("변경 중 오류가 발생했습니다.");
+    }
+  }
+
+  function render(){
+    const kw = (qEl.value || "").toLowerCase().trim();
+    const rows = all.filter(u => {
+      if (!kw) return true;
+      const hay = `${u.nickname} ${u.name}`.toLowerCase();
+      return hay.includes(kw);
+    });
+
+    listEl.innerHTML = "";
+    rows.forEach(u=>{
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <div>
+          <div><b>${u.nickname || u.name || "(이름없음)"}</b>
+            ${u.isHotMember ? '<span class="badge-hot">열혈</span>' : ''}
+          </div>
+          <div class="meta">${u.grade || ""} ｜ 총점 ${u.score}점</div>
+        </div>
+        <button class="btn ${u.isHotMember ? 'hot':''}" data-id="${u.id}">
+          ${u.isHotMember ? '열혈 해제' : '열혈 지정'}
+        </button>
+      `;
+      listEl.appendChild(card);
+    });
+  }
+
+  qEl.addEventListener("input", render);
+  listEl.addEventListener("click", (e)=>{
+    if (e.target.matches(".btn")) {
+      const id = e.target.dataset.id;
+      const u = all.find(x=>x.id===id);
+      if (!u) return;
+      toggleHot(id, u.isHotMember);
+    }
+  });
+
+  load();
+</script>
+</body>
+</html>

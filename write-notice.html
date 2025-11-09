@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1024" />
+<title>공지 작성 - 원주여자고등학교</title>
+<style>
+  body{margin:0;font-family:'Noto Sans KR',sans-serif;background:#fff0f3;}
+  .header{display:flex;justify-content:space-between;align-items:center;padding:10px 20px;border-bottom:2px solid #000;}
+  .nav-container{flex:1;display:flex;justify-content:center;}
+  .nav{display:flex;gap:80px;font-size:14px;}
+  .nav a{text-decoration:none;color:#000;}
+  .nav a:hover{font-weight:bold;}
+  .login{background:#fce4ec;padding:5px 15px;border-radius:10px;font-size:14px;cursor:pointer;}
+  .nav-bar {
+  background-color: #ffcbd6;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 48px;
+  font-size: 14px;
+  margin: 20px;
+  border-radius: 10px;
+  border: 2px solid #f9aebe;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.nav-bar a {
+  flex: 1;
+  text-align: center;
+  text-decoration: none;
+  color: black;
+  padding: 10px 0;
+  border-right: 1px solid #d999aa;
+  transition: all 0.2s ease;
+}
+
+.nav-bar a:last-child {
+  border-right: none;
+}
+
+.nav-bar a:hover {
+  background-color: #fdd8e1;
+  font-weight: bold;
+}
+
+
+  .main{padding:30px;}
+  .square {
+  background: #FFDDE3;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,.05);
+  border: 2px solid #f9aebe;       /* posts.html 특유의 부드러운 분홍 테두리 */
+  margin-top: 20px;
+}
+h2 {
+  margin-top: 0;
+  color: #5b3b3b;
+  font-size: 22px;
+}
+
+  input[type="text"], textarea{padding:10px;font-size:16px;border:1px solid #ccc;border-radius:5px;width:100%;box-sizing:border-box;}
+  textarea{height:120px;resize:vertical;}
+  .submit-button{background:#f9aebe;color:#fff;padding:10px;border:none;border-radius:5px;font-size:16px;cursor:pointer;align-self:flex-end;}
+  .submit-button:hover{background:#f08ca0;}
+</style>
+</head>
+<body style="overflow:none">
+  <div class="header">
+    <a href="index.html" style="text-decoration:none;color:#000;padding:10px 20px;"><b>원주여자고등학교</b></a>
+    <div class="nav-container">
+      <div class="nav">
+        <a href="posts.html">게시판</a>
+        <a href="notice.html" class="active">공지사항</a>
+        <a href="inquiry.html">문의하기</a>
+      </div>
+    </div>
+    <div class="login">로그인</div>
+  </div>
+
+  <div class="nav-bar">
+    <a href="notice.html" class="active">공지 목록</a>
+    <a href="write-notice.html">공지 작성</a>
+  </div>
+
+  <div class="main">
+    <div class="square" style="display:flex;flex-direction:column;gap:12px;">
+      <h2 style="margin:0 0 8px 0;">공지 작성</h2>
+      <input id="title" type="text" placeholder="제목" />
+      <textarea id="content" placeholder="내용"></textarea>
+      <input type="file" id="fileInput" accept="image/*, .pdf, .doc, .docx" />
+      <div id="attachStatus" style="margin-top:6px; font-size:13px; color:gray;"></div>
+
+      <button class="submit-button" onclick="submitNotice()">등록</button>
+    </div>
+  </div>
+
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCrxJuOjHGdttC2gfwfjqsvAjHicEav6BA",
+      authDomain: "wjgh-learningdataroom.firebaseapp.com",
+      projectId: "wjgh-learningdataroom",
+      storageBucket: "wjgh-learningdataroom.firebasestorage.app",
+      messagingSenderId: "284248567704",
+      appId: "1:284248567704:web:88e70e08666e13ff80c5ed"
+    };
+    const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    signInAnonymously(auth).catch(console.warn);
+    const db = getFirestore(app);
+
+    // 로그인/권한 UI
+    document.addEventListener("DOMContentLoaded", () => {
+      const userStr = localStorage.getItem("user");
+      const loginDiv = document.querySelector(".login");
+      if (userStr) {
+        const u = JSON.parse(userStr);
+        loginDiv.textContent = `${u.name}님 환영합니다`;
+        loginDiv.style.fontWeight = "bold";
+        loginDiv.style.cursor = "default";
+        loginDiv.addEventListener("click", () => {
+          if (confirm("로그아웃 하시겠습니까?")) {
+            localStorage.removeItem("user"); location.reload();
+          }
+        });
+      } else {
+        loginDiv.textContent = "로그인";
+        loginDiv.style.cursor = "pointer";
+        loginDiv.addEventListener("click", () => location.href = "login.html");
+      }
+    });
+
+    // 접근 제어: 관리자만
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user) { alert("로그인 후 이용하세요."); location.href="login.html"; }
+    if (user?.role !== "admin") { alert("관리자만 공지 작성이 가능합니다."); location.href="notice.html"; }
+
+    // 공지 저장
+    window.submitNotice = async function(){
+      const title = document.getElementById("title").value.trim();
+      const content = document.getElementById("content").value.trim();
+      if (!title || !content) { alert("제목/내용을 입력하세요."); return; }
+
+      await addDoc(collection(db, "notices"), {
+        title, content,
+        writer: user.name || user.id,
+        nickname: user.nickname || "관리자",
+        role: user.role,
+        createdAt: serverTimestamp(),
+        attachment: window.attached || null   // ★ 첨부 메타 저장
+      });
+
+      alert("등록되었습니다.");
+      location.href = "notice.html";
+    }
+  </script>
+
+  <script>
+  const API_BASE = "http://127.0.0.1:5000";  // Flask 주소
+  window.attached = null;
+
+  const fileInput = document.getElementById("fileInput");
+  const attachStatus = document.getElementById("attachStatus");
+
+  async function uploadToServer(file){
+    const form = new FormData();
+    form.append("file", file);
+    const res = await fetch(`${API_BASE}/api/upload`, { method: "POST", body: form });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "upload failed");
+    return data; // { fileId, filename, key, size }
+  }
+
+  if (fileInput) {
+    fileInput.addEventListener("change", async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      if (attachStatus) attachStatus.textContent = "⏳ 첨부 업로드 중…";
+      try {
+        const meta = await uploadToServer(file);
+        window.attached = meta;
+        const kb = Math.round((meta.size || 0) / 1024);
+        if (attachStatus) attachStatus.textContent = `✅ 첨부 완료: ${meta.filename} (${kb} KB)`;
+      } catch (err) {
+        console.error(err);
+        window.attached = null;
+        if (attachStatus) attachStatus.textContent = "❌ 업로드 실패. 다시 선택하세요.";
+        fileInput.value = "";
+      }
+    });
+  }
+
+  // ===== nav / nav-bar 현재 페이지 자동 active =====
+function setActive(selector) {
+  const els = document.querySelectorAll(selector + " a[href]");
+  if (!els.length) return;
+
+  const here = location.pathname.split("/").pop().split("?")[0] || "index.html";
+
+  let matched = false;
+  els.forEach(a => {
+    const file = a.getAttribute("href").split("/").pop().split("?")[0];
+    if (file === here) {
+      a.classList.add("active");
+      matched = true;
+    }
+  });
+
+  if (!matched) els[0].classList.add("active");
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  setActive(".nav");
+  setActive(".nav-bar");
+});
+
+</script>
+
+</body>
+</html>
